@@ -3,6 +3,12 @@ started for your boot_rel. This saves having to do rebar generate
 between minor and static file edits that would otherwise hinder your
 productivity.
 
+It means you can just run this in your release development directory
+rather than having to maintain your own hacky start-dev and
+application:start(App) code:
+
+    start-dev
+
 # How it works
 
 It reads your rel/reltool.config file and starts the relevant
