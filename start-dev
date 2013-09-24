@@ -1,0 +1,3 @@
+#!/bin/bash
+
+erl -pa ebin apps/*/ebin deps/*/ebin "$@" -s start
