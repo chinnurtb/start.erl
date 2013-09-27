@@ -8,8 +8,12 @@ start() ->
   {value, {rel, BootRel, _Vsn, Apps}} = lists:keysearch(BootRel, 2, Sys),
 
   SortedAppList = sort(deps(Apps, Apps, [])),
-  lists:foreach(fun application:start/1, SortedAppList),
-  ok.
+  lists:foreach(fun(App) ->
+        case application:start(App) of
+          ok -> ok;
+          {error, {already_started, App}} -> ok
+        end
+    end, SortedAppList).
 
 deps([], _Apps, AppsWithDeps) ->
   AppsWithDeps;
@@ -17,6 +21,7 @@ deps([App|T], Apps, AppsWithDeps) ->
   Ebin = code:lib_dir(App, ebin),
   AppL = atom_to_list(App),
   AppFile = filename:join(Ebin, AppL ++ ".app"),
+
   {ok, [{application, App, Opts}]} = file:consult(AppFile),
 
   Deps = proplists:get_value(applications, Opts, []),
@@ -26,7 +31,13 @@ deps([App|T], Apps, AppsWithDeps) ->
        [{App, Deps}|AppsWithDeps]).
 
 sort(AppsWithDeps) ->
-  [App || {App, _} <- lists:usort(fun sort/2, AppsWithDeps)].
+  [App || {App, _} <- lists:sort(fun sort/2, AppsWithDeps)].
 
-sort({App1, _Deps1}, {_App2, Deps2}) ->
-  lists:member(App1, Deps2).
+sort({App1, Deps1}, {App2, Deps2}) ->
+  M = lists:member(App1, Deps2),
+  if
+    not M ->
+      not lists:member(App2, Deps1);
+    true ->
+      M
+  end.
